@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جمعية زواج</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="modern-header">
+        <div class="header-container">
+            <div class="logo-container">
+                <div class="logo">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h1>جمعية زواج</h1>
+                <span class="subtitle">أبناء قبيلة آل مستنير</span>
+            </div>
+
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#home" class="nav-link active"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li><a href="#register" class="nav-link"><i class="fas fa-user-plus"></i> تسجيل عضو</a></li>
+                    <li><a href="#members" class="nav-link"><i class="fas fa-users"></i> قائمة الأعضاء</a></li>
+                    <li><a href="#terms" class="nav-link"><i class="fas fa-file-contract"></i> القوانين</a></li>
+                    <li><a href="#collection" class="nav-link"><i class="fas fa-hand-holding-usd"></i> التحصيل</a></li>
+                </ul>
+            </nav>
+
+            <div class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- قسم الرئيسية -->
+        <section id="home" class="content-section active">
+            <h2><i class="fas fa-home"></i> مرحباً بك في تطبيق جمعية زواج</h2>
+            <p>هذا التطبيق يهدف لتنظيم وإدارة شؤون جمعية الزواج الخاصة بالقبيلة.</p>
+        </section>
+
+        <!-- قسم قائمة الأعضاء -->
+        <section id="members" class="content-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-users"></i>
+                    <h2>قائمة أعضاء الجمعية</h2>
+                </div>
+                <div class="section-subtitle">
+                    إدارة وعرض بيانات أعضاء جمعية زواج أبناء قبيلة آل مستنير
+                </div>
+            </div>
+
+            <!-- معلومات إحصائية -->
+            <div class="stats-container" id="membersStats">
+                <!-- سيتم ملء الإحصائيات هنا بواسطة JavaScript -->
+            </div>
+
+            <!-- أدوات البحث والتصفية -->
+            <div class="table-tools">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="memberSearchInput" placeholder="بحث عن عضو..." oninput="filterMembers()">
+                </div>
+
+                <div class="filter-options">
+                    <select id="statusFilter" onchange="filterMembers()">
+                        <option value="">جميع الحالات</option>
+                        <option value="لم يتزوج">لم يتزوج</option>
+                        <option value="تزوج">تزوج</option>
+                        <option value="تم تحديد الزواج">تم تحديد الزواج</option>
+                    </select>
+
+                    <select id="paymentFilter" onchange="filterMembers()">
+                        <option value="">جميع حالات الدفع</option>
+                        <option value="استلم">استلم</option>
+                        <option value="لم يستلم">لم يستلم</option>
+                    </select>
+
+                    <select id="regularityFilter" onchange="filterMembers()">
+                        <option value="">جميع حالات الانتظام</option>
+                        <option value="منتظم">منتظم</option>
+                        <option value="متأخر">متأخر</option>
+                        <option value="متعثر">متعثر</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- جدول الأعضاء -->
+            <div class="table-container">
+                <table id="membersTable" class="responsive-table">
+                    <thead>
+                        <tr>
+                            <th width="5%">الرقم</th>
+                            <th width="20%">الاسم</th>
+                            <th width="10%">الحالة</th>
+                            <th width="15%">تاريخ الزواج</th>
+                            <th width="15%">المتبقي على الزواج</th>
+                            <th width="10%">الدفع</th>
+                            <th width="25%">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersBody">
+                        <!-- سيتم ملء الصفوف هنا بواسطة JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- مفتاح الألوان -->
+            <div class="table-legend">
+                <div class="legend-item">
+                    <span class="status-indicator status-regular"></span>
+                    <span>منتظم</span>
+                </div>
+                <div class="legend-item">
+                    <span class="status-indicator status-late"></span>
+                    <span>متأخر</span>
+                </div>
+                <div class="legend-item">
+                    <span class="status-indicator status-defaulted"></span>
+                    <span>متعثر</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم تسجيل عضو جديد -->
+        <section id="register" class="content-section">
+            <h2><i class="fas fa-user-plus"></i> تسجيل عضو جديد</h2>
+
+            <div class="register-container">
+                <div class="register-header">
+                    <div class="step-indicator active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-title">البيانات الشخصية</div>
+                    </div>
+                    <div class="step-indicator" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-title">بيانات الاتصال</div>
+                    </div>
+                    <div class="step-indicator" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-title">الموافقة والتأكيد</div>
+                    </div>
+                </div>
+
+                <form id="registerForm" class="multi-step-form">
+                    <!-- الخطوة 1: البيانات الشخصية -->
+                    <div class="form-step active" data-step="1">
+                        <h3>البيانات الشخصية</h3>
+
+                        <div class="form-group">
+                            <label for="memberName">
+                                <i class="fas fa-user"></i>
+                                الاسم الكامل
+                            </label>
+                            <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                                <input type="text" id="memberName" name="memberName" placeholder="أدخل الاسم الكامل" style="flex: 1;">
+                                <button type="button" class="paste-names-btn" onclick="showBulkNamesModal()">
+                                    <i class="fas fa-users"></i> إضافة مجموعة أعضاء
+                                </button>
+                            </div>
+                            <div class="form-hint">يرجى إدخال الاسم الرباعي كاملاً</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="memberId">
+                                <i class="fas fa-id-card"></i>
+                                رقم الهوية
+                            </label>
+                            <input type="text" id="memberId" name="memberId" placeholder="أدخل رقم الهوية المكون من 10 أرقام"
+                                pattern="\d{10}" title="يجب أن يتكون رقم الهوية من 10 أرقام">
+                            <div class="form-hint">يجب أن يتكون رقم الهوية من 10 أرقام فقط</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="memberStatus">
+                                <i class="fas fa-user-tag"></i>
+                                حالة العضو
+                            </label>
+                            <select id="memberStatus" name="memberStatus">
+                                <option value="نشط" selected>نشط</option>
+                                <option value="غير نشط">غير نشط</option>
+                            </select>
+                            <div class="form-hint">حالة العضو في الجمعية</div>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="button" class="next-step-btn">التالي <i class="fas fa-arrow-left"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- الخطوة 2: بيانات الاتصال -->
+                    <div class="form-step" data-step="2">
+                        <h3>بيانات الاتصال</h3>
+
+                        <div class="form-group">
+                            <label for="memberEmail">
+                                <i class="fas fa-envelope"></i>
+                                البريد الإلكتروني
+                            </label>
+                            <input type="email" id="memberEmail" name="memberEmail" placeholder="أدخل البريد الإلكتروني">
+                            <div class="form-hint">مثال: example@domain.com</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="memberPhone">
+                                <i class="fas fa-mobile-alt"></i>
+                                رقم الجوال
+                            </label>
+                            <input type="tel" id="memberPhone" name="memberPhone" placeholder="05xxxxxxxx"
+                                pattern="05\d{8}" title="يجب أن يبدأ رقم الجوال بـ 05 ويتكون من 10 أرقام">
+                            <div class="form-hint">يجب أن يبدأ الرقم بـ 05 ويتكون من 10 أرقام</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">
+                                <i class="fas fa-map-marker-alt"></i>
+                                العنوان
+                            </label>
+                            <textarea id="address" name="address" placeholder="أدخل العنوان التفصيلي" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="button" class="prev-step-btn"><i class="fas fa-arrow-right"></i> السابق</button>
+                            <button type="button" class="next-step-btn">التالي <i class="fas fa-arrow-left"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- الخطوة 3: الموافقة والتأكيد -->
+                    <div class="form-step" data-step="3">
+                        <h3>الموافقة والتأكيد</h3>
+
+                        <div class="form-group">
+                            <label for="joinDate">
+                                <i class="fas fa-calendar-alt"></i>
+                                تاريخ الانضمام
+                            </label>
+                            <input type="date" id="joinDate" name="joinDate" readonly>
+                            <div class="form-hint">تاريخ اليوم (يتم تعيينه تلقائياً)</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">
+                                <i class="fas fa-sticky-note"></i>
+                                ملاحظات إضافية
+                            </label>
+                            <textarea id="notes" name="notes" placeholder="أي ملاحظات إضافية تود إضافتها" rows="3"></textarea>
+                        </div>
+
+                        <div class="terms-agreement">
+                            <div class="terms-summary">
+                                <h4>ملخص الشروط والأحكام</h4>
+                                <ul>
+                                    <li>الالتزام بدفع مبلغ (1000 ريال) عند وجود مناسبة زواج.</li>
+                                    <li>الالتزام بالدفع واجب على الجميع بدون شروط أو قيود.</li>
+                                    <li>لا يجوز إدخال مشاكل القبيلة أو المشاكل الشخصية في الجمعية.</li>
+                                </ul>
+                                <a href="#terms" onclick="showSection('terms'); return false;" class="view-full-terms">عرض الشروط كاملة</a>
+                            </div>
+
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" id="agreeTermsRegister" name="agreeTermsRegister">
+                                <label for="agreeTermsRegister">أقر بأنني قرأت وأوافق على <a href="#terms" onclick="showSection('terms'); return false;">الشروط والأحكام</a> الخاصة بالجمعية</label>
+                            </div>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="button" class="prev-step-btn"><i class="fas fa-arrow-right"></i> السابق</button>
+                            <button type="submit" id="registerSubmitButton" disabled>
+                                <i class="fas fa-user-plus"></i> تسجيل العضو
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- قسم الشروط والأحكام -->
+        <section id="terms" class="content-section">
+            <h2><i class="fas fa-file-contract"></i> الشروط والأحكام - جمعية زواج أبناء قبيلة آل مستنير</h2>
+            <div class="agreement-controls">
+                <button id="editTermsButton"><i class="fas fa-edit"></i> تعديل الاتفاقية</button>
+                <button id="saveTermsButton" style="display: none;"><i class="fas fa-save"></i> حفظ التعديلات</button>
+            </div>
+            <article id="termsContent" contenteditable="false">
+                <h3>بسم الله الرحمن الرحيم</h3>
+                <p>الحمد لله والصلاة والسلام على رسول الله، وبعد:</p>
+                <p>انطلاقًا من مبدأ التكافل الاجتماعي، وتعزيز روح التعاون والمساندة بين أبناء قبيلة آل مستنير، فقد تم الاتفاق بين المشاركين في هذه الجمعية على البنود التالية:</p>
+
+                <h4>المادة (1): آلية الجمع</h4>
+                <ul>
+                    <li>يتم جمع مبلغ (1000 ريال) من كل عضو عند وجود مناسبة زواج.</li>
+                    <li>لا يتم الجمع شهريًا، وإنما حسب الحاجة عند وجود زواج فعلي لأحد الأعضاء.</li>
+                    <li>يتم التسليم فقط في حال تم تحديد موعد الزواج رسميًا.</li>
+                    <li>إذا وُجد زواج ثالث في نفس الشهر، يتم ترحيله إلى الشهر التالي.</li>
+                </ul>
+
+                <h4>المادة (2): شروط الاستحقاق</h4>
+                 <ul>
+                    <li>يستحق العضو الدعم فقط عند وجود زواج مؤكد خلال الشهر.</li>
+                    <li>لا يتم التسليم في حال تم تأجيل الزواج، أو لم يتم تحديد موعده رسميًا.</li>
+                </ul>
+
+                <h4>المادة (3): الالتزام المالي</h4>
+                 <ul>
+                    <li>الالتزام بالدفع واجب على الجميع بدون شروط أو قيود.</li>
+                    <li>لا يُعفى أي عضو من الدفع بسبب خلافات أو آراء شخصية.</li>
+                </ul>
+
+                <h4>المادة (4): الاستقلالية وعدم التدخل</h4>
+                 <ul>
+                    <li>لا يجوز إدخال مشاكل القبيلة أو المشاكل الشخصية في الجمعية.</li>
+                    <li>الجمعية مستقلة إداريًا وماليًا، ويجب احترام هذا الاستقلال.</li>
+                </ul>
+
+                <h4>المادة (5): حالات الوفاة</h4>
+                 <ul>
+                    <li>في حال وفاة أحد الأعضاء، يتم حصر جميع المبالغ التي دفعها سابقًا.</li>
+                    <li>تُجمَّع هذه المبالغ وتسلم لورثته الشرعيين أو من ينوب عنهم رسميًا.</li>
+                    <li>يُعفى الورثة من أي التزامات مالية لاحقة للجمعية.</li>
+                </ul>
+
+                <h4>المادة (6): اللجنة المشرفة</h4>
+                 <ul>
+                    <li>تتولى لجنة مكونة من أبناء القبيلة المهام التالية:
+                        <ul>
+                            <li>تنسيق مواعيد الزواج.</li>
+                            <li>إعلان الجمعية عند وجود زواج.</li>
+                            <li>جمع المبالغ من الأعضاء.</li>
+                            <li>تسليم المبلغ للمستفيد.</li>
+                            <li>حفظ السجلات والتوثيق الكامل.</li>
+                            <li>حل الخلافات التي قد تنشأ.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>المادة (7): تنظيم الاتفاقات</h4>
+                 <ul>
+                    <li>يمنع منعًا باتًا أي اتفاق خاص بين العضو والمستفيد.</li>
+                    <li>الجمع والتسليم يتم فقط من خلال اللجنة المشرفة.</li>
+                </ul>
+
+                <h4>المادة (8): آلية التسليم</h4>
+                 <ul>
+                    <li>يتم تسليم المبلغ للمستفيد مع معونة القبيلة المعتادة.</li>
+                    <li>لا يُشترط إقامة زامل خاص للمستفيد.</li>
+                </ul>
+
+                <h4>المادة (9): أحكام ختامية</h4>
+                 <ul>
+                    <li>يبدأ تطبيق هذه الاتفاقية من تاريخ توقيعها من قبل الأعضاء.</li>
+                    <li>يُعد توقيع العضو إقرارًا بالالتزام الكامل بجميع البنود.</li>
+                    <li>يمكن تعديل البنود بموافقة أغلبية الأعضاء.</li>
+                </ul>
+
+                <h4>بيانات العضو:</h4>
+                <p>الاسم الكامل: <span id="printMemberName">..............................</span></p>
+                <p>التوقيع: ..............................</p>
+                <p>رقم الهوية: <span id="printMemberId">..............................</span></p>
+                <p>رقم الجوال: <span id="printMemberPhone">..............................</span></p>
+                <p>التاريخ: <span id="printDate">..............................</span></p>
+                <p>أقر أنا الموقع أدناه بكامل أهليتي المعتبرة شرعًا ونظامًا، بأنني اطلعت على كافة بنود هذه الاتفاقية وأوافق عليها وألتزم بجميع ما ورد فيها.</p>
+                <p>التوقيع:</p>
+                <div class="signature-area">
+                    <canvas id="signatureCanvas" width="400" height="150"></canvas>
+                    <div class="signature-controls">
+                        <button id="clearSignatureButton"><i class="fas fa-eraser"></i> مسح التوقيع</button>
+                        <!-- زر حفظ التوقيع قد لا يكون ضرورياً إذا كان الحفظ يتم مع الطباعة أو الإرسال -->
+                    </div>
+                </div>
+            </article>
+            <div id="memberSelectionArea">
+                <label for="selectMemberForAgreement"><i class="fas fa-user-check"></i> اختيار العضو للاتفاقية:</label>
+                <select id="selectMemberForAgreement" name="selectMemberForAgreement">
+                    <option value="">-- اختر عضو --</option>
+                    <!-- سيتم ملء الخيارات هنا بواسطة JavaScript -->
+                </select>
+            </div>
+            <div style="margin-top: 2rem; text-align: center;">
+                <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                <label for="agreeTerms">أوافق على جميع الشروط والأحكام المذكورة أعلاه وأعتبرها ملزمة لي.</label>
+                <br>
+                <button id="printTermsButton" style="margin-top: 10px;" disabled><i class="fas fa-print"></i> طباعة الاتفاقية للعضو المحدد</button> <!-- يبدأ معطلاً -->
+                <div class="send-options" style="margin-top: 15px;">
+                    <button id="sendWhatsAppButton" disabled><i class="fab fa-whatsapp"></i> إرسال عبر واتساب</button>
+                    <button id="sendEmailButton" disabled><i class="fas fa-envelope"></i> إرسال عبر البريد الإلكتروني</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- قسم التحصيل -->
+        <section id="collection" class="content-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <h2>التحصيل المالي للأعضاء</h2>
+                </div>
+                <div class="section-subtitle">
+                    إدارة عمليات التحصيل المالي وتوثيق المدفوعات
+                </div>
+            </div>
+
+            <!-- قسم عرض المتزوجين والذين تم تحديد زواجهم -->
+            <div class="marriage-summary-container">
+                <div class="marriage-summary-header">
+                    <h3><i class="fas fa-calendar-check"></i> الأعضاء المتزوجون وتواريخ الزواج</h3>
+                </div>
+                <div class="marriage-tabs">
+                    <button class="marriage-tab active" data-tab="married">المتزوجون</button>
+                    <button class="marriage-tab" data-tab="scheduled">تم تحديد الزواج</button>
+                </div>
+                <div class="marriage-content">
+                    <div id="married-tab" class="marriage-tab-content active">
+                        <div class="marriage-cards" id="marriedMembersCards">
+                            <!-- سيتم ملء البطاقات هنا بواسطة JavaScript -->
+                            <div class="empty-state">
+                                <i class="fas fa-info-circle"></i>
+                                <p>لا يوجد أعضاء متزوجون حاليًا</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="scheduled-tab" class="marriage-tab-content">
+                        <div class="marriage-cards" id="scheduledMembersCards">
+                            <!-- سيتم ملء البطاقات هنا بواسطة JavaScript -->
+                            <div class="empty-state">
+                                <i class="fas fa-info-circle"></i>
+                                <p>لا يوجد أعضاء تم تحديد زواجهم حاليًا</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قسم إضافة تحصيل جديد -->
+            <div class="collection-form-container">
+                <div class="collection-form-header">
+                    <h3><i class="fas fa-plus-circle"></i> إضافة تحصيل جديد</h3>
+                </div>
+
+                <div class="collection-selection-type">
+                    <div class="selection-type-label">اختر طريقة التحصيل:</div>
+                    <div class="selection-type-options">
+                        <label class="selection-option">
+                            <input type="radio" name="selectionType" value="single" checked>
+                            <span class="option-text"><i class="fas fa-user"></i> عضو فردي</span>
+                        </label>
+                        <label class="selection-option">
+                            <input type="radio" name="selectionType" value="multiple">
+                            <span class="option-text"><i class="fas fa-users"></i> مجموعة أعضاء</span>
+                        </label>
+                        <label class="selection-option">
+                            <input type="radio" name="selectionType" value="all">
+                            <span class="option-text"><i class="fas fa-users-cog"></i> جميع الأعضاء</span>
+                        </label>
+                    </div>
+                </div>
+
+                <form id="collectionForm" class="collection-form">
+                    <!-- اختيار العضو الفردي -->
+                    <div id="singleMemberSelection" class="member-selection-container">
+                        <div class="form-group">
+                            <label for="collectionMember">
+                                <i class="fas fa-user"></i>
+                                اختر العضو
+                            </label>
+                            <select id="collectionMember" name="collectionMember" required>
+                                <option value="">-- اختر عضو --</option>
+                                <!-- سيتم ملء الخيارات هنا بواسطة JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- اختيار مجموعة أعضاء -->
+                    <div id="multipleMemberSelection" class="member-selection-container" style="display: none;">
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-users"></i>
+                                اختر الأعضاء
+                            </label>
+                            <div class="members-multi-select-container">
+                                <div class="members-search">
+                                    <input type="text" id="membersSearchInput" placeholder="ابحث عن عضو...">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="members-list" id="membersMultiSelectList">
+                                    <!-- سيتم ملء القائمة هنا بواسطة JavaScript -->
+                                </div>
+                                <div class="members-selection-controls">
+                                    <button type="button" id="selectAllMembers">اختيار الكل</button>
+                                    <button type="button" id="deselectAllMembers">إلغاء اختيار الكل</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- عرض الأعضاء المختارين (للاختيار المتعدد) -->
+                    <div id="selectedMembersPreview" class="selected-members-preview" style="display: none;">
+                        <div class="preview-header">
+                            <h4>الأعضاء المختارون (<span id="selectedMembersCount">0</span>)</h4>
+                        </div>
+                        <div class="selected-members-list" id="selectedMembersList">
+                            <!-- سيتم ملء القائمة هنا بواسطة JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- بيانات التحصيل -->
+                    <div class="collection-details">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="collectionAmount">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    المبلغ
+                                </label>
+                                <input type="number" id="collectionAmount" name="collectionAmount" min="1" value="1000" required>
+                                <div class="form-hint">المبلغ الافتراضي هو 1000 ريال</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="collectionDate">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    تاريخ التحصيل
+                                </label>
+                                <input type="date" id="collectionDate" name="collectionDate" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="collectionMethod">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    طريقة التحويل
+                                </label>
+                                <select id="collectionMethod" name="collectionMethod" required>
+                                    <option value="bank">تحويل بنكي</option>
+                                    <option value="cash">نقدي</option>
+                                    <option value="other">أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="bankNameGroup">
+                                <label for="bankName">
+                                    <i class="fas fa-university"></i>
+                                    اسم البنك
+                                </label>
+                                <select id="bankName" name="bankName">
+                                    <option value="">-- اختر البنك --</option>
+                                    <option value="الراجحي">مصرف الراجحي</option>
+                                    <option value="الأهلي">البنك الأهلي السعودي</option>
+                                    <option value="سامبا">مجموعة سامبا المالية</option>
+                                    <option value="الرياض">بنك الرياض</option>
+                                    <option value="العربي">البنك العربي الوطني</option>
+                                    <option value="ساب">البنك السعودي البريطاني (ساب)</option>
+                                    <option value="الإنماء">مصرف الإنماء</option>
+                                    <option value="البلاد">بنك البلاد</option>
+                                    <option value="الجزيرة">بنك الجزيرة</option>
+                                    <option value="الفرنسي">البنك السعودي الفرنسي</option>
+                                    <option value="الاستثمار">البنك السعودي للاستثمار</option>
+                                    <option value="آخر">بنك آخر</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="otherBankGroup" style="display: none;">
+                                <label for="otherBankName">
+                                    <i class="fas fa-university"></i>
+                                    اسم البنك الآخر
+                                </label>
+                                <input type="text" id="otherBankName" name="otherBankName" placeholder="أدخل اسم البنك">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="collectionRecipient">
+                                <i class="fas fa-user-tie"></i>
+                                المستلم (عضو لجنة الإشراف)
+                            </label>
+                            <select id="collectionRecipient" name="collectionRecipient" required>
+                                <option value="">-- اختر المستلم --</option>
+                                <option value="ناصر مسعود آل مستنير">ناصر مسعود آل مستنير</option>
+                                <option value="محمد علي آل مستنير">محمد علي آل مستنير</option>
+                                <option value="أحمد سعيد آل مستنير">أحمد سعيد آل مستنير</option>
+                                <option value="خالد محمد آل مستنير">خالد محمد آل مستنير</option>
+                                <option value="آخر">مستلم آخر</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="otherRecipientGroup" style="display: none;">
+                            <label for="otherRecipientName">
+                                <i class="fas fa-user-tie"></i>
+                                اسم المستلم الآخر
+                            </label>
+                            <input type="text" id="otherRecipientName" name="otherRecipientName" placeholder="أدخل اسم المستلم">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="collectionNotes">
+                                <i class="fas fa-sticky-note"></i>
+                                ملاحظات
+                            </label>
+                            <textarea id="collectionNotes" name="collectionNotes" placeholder="أي ملاحظات إضافية" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-plus-circle"></i> إضافة التحصيل
+                        </button>
+                        <button type="reset" class="btn-secondary">
+                            <i class="fas fa-redo"></i> إعادة تعيين
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- جدول التحصيلات -->
+            <div class="collection-table-container">
+                <div class="collection-table-header">
+                    <h3><i class="fas fa-table"></i> سجل التحصيلات</h3>
+                    <div class="table-actions">
+                        <button id="exportCollectionBtn" class="btn-secondary">
+                            <i class="fas fa-file-export"></i> تصدير البيانات
+                        </button>
+                        <button id="printCollectionBtn" class="btn-secondary">
+                            <i class="fas fa-print"></i> طباعة
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-filters">
+                    <div class="search-box">
+                        <input type="text" id="collectionSearchInput" placeholder="ابحث في التحصيلات...">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="filter-options">
+                        <select id="collectionMethodFilter">
+                            <option value="">جميع طرق التحويل</option>
+                            <option value="bank">تحويل بنكي</option>
+                            <option value="cash">نقدي</option>
+                            <option value="other">أخرى</option>
+                        </select>
+
+                        <select id="collectionDateFilter">
+                            <option value="">جميع التواريخ</option>
+                            <option value="today">اليوم</option>
+                            <option value="week">هذا الأسبوع</option>
+                            <option value="month">هذا الشهر</option>
+                            <option value="year">هذا العام</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table id="collectionTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="20%">العضو</th>
+                                <th width="10%">المبلغ</th>
+                                <th width="15%">تاريخ التحصيل</th>
+                                <th width="15%">طريقة التحويل</th>
+                                <th width="15%">البنك</th>
+                                <th width="15%">المستلم</th>
+                                <th width="5%">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="collectionBody">
+                            <!-- سيتم ملء الصفوف هنا بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="collection-summary">
+                    <div class="summary-card">
+                        <div class="summary-title">إجمالي التحصيلات</div>
+                        <div class="summary-value" id="totalCollectionAmount">0 ريال</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-title">عدد العمليات</div>
+                        <div class="summary-value" id="totalCollectionCount">0</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-title">تحويلات بنكية</div>
+                        <div class="summary-value" id="bankTransfersAmount">0 ريال</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-title">مدفوعات نقدية</div>
+                        <div class="summary-value" id="cashPaymentsAmount">0 ريال</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>التطبيق عمل الاستاذ / ناصر مسعود آل مستنير إهداء لابناء القبيلة</p>
+    </footer>
+
+    <!-- نافذة منبثقة لنسخ الأسماء المتعددة -->
+    <div id="bulkNamesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة مجموعة أعضاء</h3>
+                <span class="close-modal" onclick="closeBulkNamesModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-tabs">
+                    <button class="tab-btn active" onclick="switchTab('paste-tab')">لصق الأسماء</button>
+                    <button class="tab-btn" onclick="switchTab('edit-tab')">تعديل القائمة</button>
+                </div>
+
+                <div id="paste-tab" class="tab-content active">
+                    <p>قم بلصق قائمة الأسماء هنا (اسم واحد في كل سطر):</p>
+                    <textarea id="bulkNamesTextarea" rows="10" placeholder="مثال:
+محمد أحمد علي الزهراني
+خالد سعيد محمد القحطاني
+عبدالله فهد سعد العتيبي"></textarea>
+                    <div class="names-preview">
+                        <h4>معاينة الأسماء (<span id="namesCount">0</span>):</h4>
+                        <ul id="namesPreviewList"></ul>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn-primary" onclick="parseNamesAndSwitchToEdit()">
+                            <i class="fas fa-arrow-left"></i> الانتقال إلى تعديل القائمة
+                        </button>
+                    </div>
+                </div>
+
+                <div id="edit-tab" class="tab-content">
+                    <p>يمكنك تعديل الأسماء أو حذفها من القائمة:</p>
+                    <div class="names-table-container">
+                        <table id="editableNamesTable" class="editable-names-table">
+                            <thead>
+                                <tr>
+                                    <th width="5%">#</th>
+                                    <th width="75%">الاسم</th>
+                                    <th width="20%">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editableNamesBody">
+                                <!-- سيتم ملء الصفوف هنا بواسطة JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bulk-actions">
+                        <button type="button" class="btn-success" onclick="addNewNameRow()">
+                            <i class="fas fa-plus"></i> إضافة اسم جديد
+                        </button>
+                        <button type="button" class="btn-danger" onclick="removeAllNames()">
+                            <i class="fas fa-trash"></i> حذف جميع الأسماء
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" onclick="processBulkNames()">
+                    <i class="fas fa-user-plus"></i> إضافة الأعضاء إلى القائمة
+                </button>
+                <button type="button" class="btn-secondary" onclick="closeBulkNamesModal()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

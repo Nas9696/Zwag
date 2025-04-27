@@ -67,6 +67,7 @@ function setupSignaturePad() {
 document.addEventListener('DOMContentLoaded', () => {
     // --- تهيئة أولية ---
     loadMembers(); // تحميل الأعضاء عند بدء التشغيل
+    loadCollections(); // تحميل التحصيلات عند بدء التشغيل
     setTodaysDateForJoinDate(); // تعيين تاريخ اليوم في نموذج التسجيل
     setupNavigation();
     setupMobileMenu(); // إعداد القائمة للأجهزة المحمولة
@@ -1174,73 +1175,947 @@ function sendTermsViaWhatsApp() {
 // قسم التحصيل
 let collections = [];
 function setupCollectionForm() {
+    // تحميل التحصيلات عند بدء التشغيل
+    loadCollections();
+
+    // الحصول على عناصر النموذج
     const form = document.getElementById('collectionForm');
     if (!form) return;
-    const memberSelect = document.getElementById('collectionMember');
-    // ملء قائمة الأعضاء
-    memberSelect.innerHTML = '<option value="">-- اختر عضو --</option>';
-    members.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = m.name;
-        memberSelect.appendChild(opt);
+
+    // إعداد علامات التبويب للمتزوجين وتواريخ الزواج
+    setupMarriageTabs();
+
+    // إعداد اختيار نوع التحصيل (فردي، مجموعة، الكل)
+    setupSelectionTypeRadios();
+
+    // إعداد حقول النموذج
+    setupFormFields();
+
+    // معالجة تقديم النموذج
+    form.addEventListener('submit', handleCollectionFormSubmit);
+
+    // إعداد أزرار تصدير البيانات والطباعة
+    setupCollectionTableActions();
+}
+
+// وظيفة لإعداد علامات التبويب للمتزوجين وتواريخ الزواج
+function setupMarriageTabs() {
+    // عرض المتزوجين والذين تم تحديد زواجهم
+    renderMarriedMembersCards();
+
+    // إضافة مستمعي الأحداث لعلامات التبويب
+    const marriageTabs = document.querySelectorAll('.marriage-tab');
+    marriageTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // إلغاء تنشيط جميع علامات التبويب
+            marriageTabs.forEach(t => t.classList.remove('active'));
+
+            // تنشيط علامة التبويب المحددة
+            tab.classList.add('active');
+
+            // إخفاء جميع محتويات علامات التبويب
+            const tabContents = document.querySelectorAll('.marriage-tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // إظهار المحتوى المرتبط بعلامة التبويب المحددة
+            const tabId = tab.getAttribute('data-tab');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+        });
     });
+}
+
+// وظيفة لعرض بطاقات الأعضاء المتزوجين والذين تم تحديد زواجهم
+function renderMarriedMembersCards() {
+    // الحصول على حاويات البطاقات
+    const marriedCardsContainer = document.getElementById('marriedMembersCards');
+    const scheduledCardsContainer = document.getElementById('scheduledMembersCards');
+
+    if (!marriedCardsContainer || !scheduledCardsContainer) return;
+
+    // تصفية الأعضاء المتزوجين والذين تم تحديد زواجهم
+    const marriedMembers = members.filter(m => m.maritalStatus === 'تزوج');
+    const scheduledMembers = members.filter(m => m.maritalStatus === 'تم تحديد الزواج');
+
+    // عرض الأعضاء المتزوجين
+    if (marriedMembers.length > 0) {
+        marriedCardsContainer.innerHTML = '';
+        marriedMembers.forEach(member => {
+            const card = createMemberCard(member);
+            marriedCardsContainer.appendChild(card);
+        });
+    } else {
+        marriedCardsContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-info-circle"></i>
+                <p>لا يوجد أعضاء متزوجون حاليًا</p>
+            </div>
+        `;
+    }
+
+    // عرض الأعضاء الذين تم تحديد زواجهم
+    if (scheduledMembers.length > 0) {
+        scheduledCardsContainer.innerHTML = '';
+        scheduledMembers.forEach(member => {
+            const card = createMemberCard(member);
+            scheduledCardsContainer.appendChild(card);
+        });
+    } else {
+        scheduledCardsContainer.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-info-circle"></i>
+                <p>لا يوجد أعضاء تم تحديد زواجهم حاليًا</p>
+            </div>
+        `;
+    }
+}
+
+// وظيفة لإنشاء بطاقة عضو
+function createMemberCard(member) {
+    const card = document.createElement('div');
+    card.className = 'marriage-card';
+
+    let countdownClass = '';
+    let countdownText = '';
+
+    if (member.marriageDate) {
+        const remainingDays = calculateRemainingDays(member.marriageDate);
+
+        if (remainingDays <= 7) {
+            countdownClass = 'very-soon';
+            countdownText = remainingDays > 0 ? `${remainingDays} يوم فقط على الزواج!` : 'اليوم هو يوم الزواج!';
+        } else if (remainingDays <= 30) {
+            countdownClass = 'urgent';
+            countdownText = `${remainingDays} يوم على الزواج`;
+        } else {
+            countdownText = `${remainingDays} يوم على الزواج`;
+        }
+    }
+
+    card.innerHTML = `
+        <div class="marriage-card-header">
+            <h4 class="marriage-card-name">${member.name}</h4>
+        </div>
+        <div class="marriage-card-date">
+            <i class="fas fa-calendar-alt"></i>
+            <span>${member.marriageDate ? formatDate(member.marriageDate) : 'لم يتم تحديد تاريخ'}</span>
+        </div>
+        ${member.marriageDate ? `
+            <div class="marriage-card-countdown ${countdownClass}">
+                <i class="fas fa-hourglass-half"></i>
+                ${countdownText}
+            </div>
+        ` : ''}
+    `;
+
+    return card;
+}
+
+// وظيفة لإعداد أزرار اختيار نوع التحصيل
+function setupSelectionTypeRadios() {
+    const selectionRadios = document.querySelectorAll('input[name="selectionType"]');
+    const singleMemberSelection = document.getElementById('singleMemberSelection');
+    const multipleMemberSelection = document.getElementById('multipleMemberSelection');
+    const selectedMembersPreview = document.getElementById('selectedMembersPreview');
+
+    if (!selectionRadios.length || !singleMemberSelection || !multipleMemberSelection) return;
+
+    selectionRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            const selectionType = radio.value;
+
+            // إخفاء جميع أقسام الاختيار
+            singleMemberSelection.style.display = 'none';
+            multipleMemberSelection.style.display = 'none';
+            selectedMembersPreview.style.display = 'none';
+
+            // إظهار القسم المناسب حسب نوع الاختيار
+            if (selectionType === 'single') {
+                singleMemberSelection.style.display = 'block';
+            } else if (selectionType === 'multiple') {
+                multipleMemberSelection.style.display = 'block';
+                selectedMembersPreview.style.display = 'block';
+                setupMultiSelectMembers();
+            } else if (selectionType === 'all') {
+                // لا نحتاج لإظهار أي قسم للاختيار عند اختيار "جميع الأعضاء"
+            }
+        });
+    });
+}
+
+// وظيفة لإعداد اختيار متعدد للأعضاء
+function setupMultiSelectMembers() {
+    const membersList = document.getElementById('membersMultiSelectList');
+    const searchInput = document.getElementById('membersSearchInput');
+    const selectAllBtn = document.getElementById('selectAllMembers');
+    const deselectAllBtn = document.getElementById('deselectAllMembers');
+
+    if (!membersList) return;
+
+    // ملء قائمة الأعضاء
+    membersList.innerHTML = '';
+    members.forEach(member => {
+        const item = document.createElement('div');
+        item.className = 'member-checkbox-item';
+        item.innerHTML = `
+            <label>
+                <input type="checkbox" value="${member.id}" data-name="${member.name}">
+                ${member.name}
+            </label>
+        `;
+        membersList.appendChild(item);
+    });
+
+    // إضافة مستمع الأحداث للبحث
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const items = membersList.querySelectorAll('.member-checkbox-item');
+
+            items.forEach(item => {
+                const label = item.querySelector('label');
+                const memberName = label.textContent.trim().toLowerCase();
+
+                if (memberName.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // إضافة مستمعي الأحداث لأزرار اختيار الكل وإلغاء اختيار الكل
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+            const checkboxes = membersList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.parentElement.parentElement.style.display !== 'none') {
+                    checkbox.checked = true;
+                }
+            });
+            updateSelectedMembersPreview();
+        });
+    }
+
+    if (deselectAllBtn) {
+        deselectAllBtn.addEventListener('click', () => {
+            const checkboxes = membersList.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateSelectedMembersPreview();
+        });
+    }
+
+    // إضافة مستمعي الأحداث لمربعات الاختيار
+    const checkboxes = membersList.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedMembersPreview);
+    });
+
+    // تحديث معاينة الأعضاء المختارين
+    updateSelectedMembersPreview();
+}
+
+// وظيفة لتحديث معاينة الأعضاء المختارين
+function updateSelectedMembersPreview() {
+    const membersList = document.getElementById('membersMultiSelectList');
+    const selectedMembersList = document.getElementById('selectedMembersList');
+    const selectedMembersCount = document.getElementById('selectedMembersCount');
+
+    if (!membersList || !selectedMembersList || !selectedMembersCount) return;
+
+    // الحصول على الأعضاء المختارين
+    const selectedCheckboxes = membersList.querySelectorAll('input[type="checkbox"]:checked');
+    const selectedMembers = Array.from(selectedCheckboxes).map(checkbox => ({
+        id: checkbox.value,
+        name: checkbox.getAttribute('data-name')
+    }));
+
+    // تحديث عدد الأعضاء المختارين
+    selectedMembersCount.textContent = selectedMembers.length;
+
+    // تحديث قائمة الأعضاء المختارين
+    selectedMembersList.innerHTML = '';
+
+    if (selectedMembers.length === 0) {
+        selectedMembersList.innerHTML = '<div class="empty-state">لم يتم اختيار أي عضو</div>';
+    } else {
+        selectedMembers.forEach(member => {
+            const tag = document.createElement('div');
+            tag.className = 'selected-member-tag';
+            tag.innerHTML = `
+                <span>${member.name}</span>
+                <button type="button" data-id="${member.id}">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            // إضافة مستمع الأحداث لزر الحذف
+            const removeBtn = tag.querySelector('button');
+            removeBtn.addEventListener('click', () => {
+                const checkbox = membersList.querySelector(`input[value="${member.id}"]`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                    updateSelectedMembersPreview();
+                }
+            });
+
+            selectedMembersList.appendChild(tag);
+        });
+    }
+}
+
+// وظيفة لإعداد حقول النموذج
+function setupFormFields() {
+    // ملء قائمة الأعضاء للاختيار الفردي
+    const memberSelect = document.getElementById('collectionMember');
+    if (memberSelect) {
+        memberSelect.innerHTML = '<option value="">-- اختر عضو --</option>';
+        members.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.textContent = m.name;
+            memberSelect.appendChild(opt);
+        });
+    }
+
+    // إعداد حقل تاريخ التحصيل
+    const dateField = document.getElementById('collectionDate');
+    if (dateField) {
+        // تعيين تاريخ اليوم كقيمة افتراضية
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+
     // إظهار/إخفاء حقل اسم البنك
     const methodSelect = document.getElementById('collectionMethod');
     const bankNameGroup = document.getElementById('bankNameGroup');
+    const otherBankGroup = document.getElementById('otherBankGroup');
+
     if (methodSelect && bankNameGroup) {
         methodSelect.addEventListener('change', () => {
-            bankNameGroup.style.display = methodSelect.value === 'bank' ? '' : 'none';
+            bankNameGroup.style.display = methodSelect.value === 'bank' ? 'block' : 'none';
+            if (otherBankGroup) {
+                otherBankGroup.style.display = 'none';
+            }
         });
     }
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const memberId = parseInt(form.collectionMember.value);
-        const amount = parseFloat(form.collectionAmount.value);
-        const recipient = form.collectionRecipient.value.trim();
-        const date = form.collectionDate.value;
-        const method = form.collectionMethod.value;
-        const bankName = form.bankName.value.trim();
-        if (!memberId || !amount || !recipient || !date || !method) {
-            alert('يرجى ملء جميع الحقول المطلوبة.');
-            return;
-        }
-        const member = members.find(m => m.id === memberId);
-        if (!member) {
-            alert('العضو غير موجود.');
-            return;
-        }
-        const transaction = {
-            amount,
-            recipient,
-            date,
-            method,
-            bankName: method === 'bank' ? bankName : '',
-        };
-        member.transactions = member.transactions || [];
-        member.transactions.push(transaction);
-        collections.push({memberId, ...transaction});
-        saveMembers();
-        renderCollectionTable();
-        alert('تمت إضافة عملية التحصيل بنجاح.');
-        form.reset();
-        bankNameGroup.style.display = 'none';
-    });
+
+    // إظهار/إخفاء حقل اسم البنك الآخر
+    const bankSelect = document.getElementById('bankName');
+    if (bankSelect && otherBankGroup) {
+        bankSelect.addEventListener('change', () => {
+            otherBankGroup.style.display = bankSelect.value === 'آخر' ? 'block' : 'none';
+        });
+    }
+
+    // إظهار/إخفاء حقل اسم المستلم الآخر
+    const recipientSelect = document.getElementById('collectionRecipient');
+    const otherRecipientGroup = document.getElementById('otherRecipientGroup');
+
+    if (recipientSelect && otherRecipientGroup) {
+        recipientSelect.addEventListener('change', () => {
+            otherRecipientGroup.style.display = recipientSelect.value === 'آخر' ? 'block' : 'none';
+        });
+    }
 }
-function renderCollectionTable() {
+
+// وظيفة لمعالجة تقديم نموذج التحصيل
+function handleCollectionFormSubmit(event) {
+    event.preventDefault();
+
+    // الحصول على نوع التحصيل المحدد
+    const selectionType = document.querySelector('input[name="selectionType"]:checked').value;
+
+    // الحصول على قيم الحقول المشتركة
+    const form = event.target;
+    const amount = parseFloat(form.collectionAmount.value);
+    const date = form.collectionDate.value;
+    const method = form.collectionMethod.value;
+    const bankName = method === 'bank' ?
+        (form.bankName.value === 'آخر' ? form.otherBankName.value.trim() : form.bankName.value) : '';
+    const recipient = form.collectionRecipient.value === 'آخر' ?
+        form.otherRecipientName.value.trim() : form.collectionRecipient.value;
+    const notes = form.collectionNotes ? form.collectionNotes.value.trim() : '';
+
+    // التحقق من صحة البيانات المشتركة
+    if (!amount || !date || !method || !recipient || (method === 'bank' && !bankName)) {
+        alert('يرجى ملء جميع الحقول المطلوبة.');
+        return;
+    }
+
+    // معالجة التحصيل حسب نوع الاختيار
+    if (selectionType === 'single') {
+        // تحصيل لعضو فردي
+        const memberId = parseInt(form.collectionMember.value);
+        if (!memberId) {
+            alert('يرجى اختيار عضو.');
+            return;
+        }
+
+        addCollection(memberId, amount, recipient, date, method, bankName, notes);
+    } else if (selectionType === 'multiple') {
+        // تحصيل لمجموعة أعضاء
+        const membersList = document.getElementById('membersMultiSelectList');
+        const selectedCheckboxes = membersList.querySelectorAll('input[type="checkbox"]:checked');
+
+        if (selectedCheckboxes.length === 0) {
+            alert('يرجى اختيار عضو واحد على الأقل.');
+            return;
+        }
+
+        // إضافة تحصيل لكل عضو مختار
+        let addedCount = 0;
+        selectedCheckboxes.forEach(checkbox => {
+            const memberId = parseInt(checkbox.value);
+            addCollection(memberId, amount, recipient, date, method, bankName, notes);
+            addedCount++;
+        });
+
+        alert(`تمت إضافة عملية تحصيل لـ ${addedCount} عضو بنجاح.`);
+    } else if (selectionType === 'all') {
+        // تحصيل لجميع الأعضاء
+        if (members.length === 0) {
+            alert('لا يوجد أعضاء مسجلون.');
+            return;
+        }
+
+        if (!confirm(`هل أنت متأكد من إضافة عملية تحصيل لجميع الأعضاء (${members.length} عضو)؟`)) {
+            return;
+        }
+
+        // إضافة تحصيل لكل عضو
+        let addedCount = 0;
+        members.forEach(member => {
+            addCollection(member.id, amount, recipient, date, method, bankName, notes);
+            addedCount++;
+        });
+
+        alert(`تمت إضافة عملية تحصيل لـ ${addedCount} عضو بنجاح.`);
+    }
+
+    // إعادة تعيين النموذج
+    form.reset();
+
+    // إعادة تعيين حقل التاريخ إلى اليوم
+    const dateField = document.getElementById('collectionDate');
+    if (dateField) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+
+    // إخفاء الحقول الإضافية
+    const bankNameGroup = document.getElementById('bankNameGroup');
+    const otherBankGroup = document.getElementById('otherBankGroup');
+    const otherRecipientGroup = document.getElementById('otherRecipientGroup');
+
+    if (bankNameGroup) bankNameGroup.style.display = 'none';
+    if (otherBankGroup) otherBankGroup.style.display = 'none';
+    if (otherRecipientGroup) otherRecipientGroup.style.display = 'none';
+}
+
+// وظيفة لإضافة تحصيل لعضو
+function addCollection(memberId, amount, recipient, date, method, bankName, notes) {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return false;
+
+    const transaction = {
+        amount,
+        recipient,
+        date,
+        method,
+        bankName: method === 'bank' ? bankName : '',
+        notes
+    };
+
+    // إضافة المعاملة إلى العضو
+    member.transactions = member.transactions || [];
+    member.transactions.push(transaction);
+
+    // تحديث حالة الدفع للعضو
+    member.paymentStatus = 'استلم';
+
+    // إضافة التحصيل إلى قائمة التحصيلات
+    collections.push({
+        memberId,
+        ...transaction
+    });
+
+    // حفظ التغييرات
+    saveMembers();
+    saveCollections();
+
+    // تحديث الجدول
+    renderCollectionTable();
+
+    return true;
+}
+
+// وظيفة لإعداد أزرار تصدير البيانات والطباعة
+function setupCollectionTableActions() {
+    // إعداد زر تصدير البيانات
+    const exportBtn = document.getElementById('exportCollectionBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportCollectionData);
+    }
+
+    // إعداد زر الطباعة
+    const printBtn = document.getElementById('printCollectionBtn');
+    if (printBtn) {
+        printBtn.addEventListener('click', printCollectionTable);
+    }
+
+    // إعداد حقل البحث
+    const searchInput = document.getElementById('collectionSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterCollectionTable);
+    }
+
+    // إعداد فلاتر الجدول
+    const methodFilter = document.getElementById('collectionMethodFilter');
+    const dateFilter = document.getElementById('collectionDateFilter');
+
+    if (methodFilter) {
+        methodFilter.addEventListener('change', filterCollectionTable);
+    }
+
+    if (dateFilter) {
+        dateFilter.addEventListener('change', filterCollectionTable);
+    }
+}
+
+// وظيفة لتصدير بيانات التحصيل
+function exportCollectionData() {
+    if (collections.length === 0) {
+        alert('لا توجد بيانات للتصدير.');
+        return;
+    }
+
+    // إنشاء مصفوفة لبيانات التصدير
+    const exportData = [];
+
+    // إضافة صف العناوين
+    exportData.push([
+        'الرقم',
+        'العضو',
+        'المبلغ',
+        'تاريخ التحصيل',
+        'طريقة التحويل',
+        'البنك',
+        'المستلم',
+        'ملاحظات'
+    ]);
+
+    // إضافة بيانات التحصيلات
+    collections.forEach((col, index) => {
+        const member = members.find(m => m.id === col.memberId);
+        exportData.push([
+            index + 1,
+            member ? member.name : '',
+            col.amount,
+            formatDate(col.date),
+            col.method === 'bank' ? 'تحويل بنكي' : col.method === 'cash' ? 'نقدي' : 'أخرى',
+            col.method === 'bank' ? col.bankName : '-',
+            col.recipient,
+            col.notes || ''
+        ]);
+    });
+
+    // إنشاء محتوى CSV
+    let csvContent = '';
+    exportData.forEach(row => {
+        csvContent += row.join(',') + '\\n';
+    });
+
+    // إنشاء رابط للتنزيل
+    const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `تحصيلات_جمعية_زواج_${formatDateForFileName(new Date())}.csv`);
+    document.body.appendChild(link);
+
+    // تنزيل الملف
+    link.click();
+
+    // إزالة الرابط
+    document.body.removeChild(link);
+}
+
+// وظيفة لتنسيق التاريخ لاستخدامه في اسم الملف
+function formatDateForFileName(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// وظيفة لطباعة جدول التحصيلات
+function printCollectionTable() {
+    if (collections.length === 0) {
+        alert('لا توجد بيانات للطباعة.');
+        return;
+    }
+
+    // إنشاء نافذة طباعة جديدة
+    const printWindow = window.open('', '_blank');
+
+    // إنشاء محتوى HTML للطباعة
+    const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>تحصيلات جمعية زواج</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                    direction: rtl;
+                }
+                h1 {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    color: #0056b3;
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                }
+                .print-date {
+                    text-align: left;
+                    margin-bottom: 20px;
+                    font-size: 0.9rem;
+                    color: #6c757d;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 30px;
+                }
+                th, td {
+                    border: 1px solid #dee2e6;
+                    padding: 10px;
+                    text-align: right;
+                }
+                th {
+                    background-color: #f8f9fa;
+                    font-weight: bold;
+                }
+                tr:nth-child(even) {
+                    background-color: #f8f9fa;
+                }
+                .summary {
+                    margin-top: 30px;
+                    border-top: 2px solid #dee2e6;
+                    padding-top: 20px;
+                }
+                .summary-item {
+                    margin-bottom: 10px;
+                }
+                .footer {
+                    margin-top: 50px;
+                    text-align: center;
+                    font-size: 0.9rem;
+                    color: #6c757d;
+                    border-top: 1px solid #dee2e6;
+                    padding-top: 20px;
+                }
+                @media print {
+                    @page {
+                        size: A4;
+                        margin: 1cm;
+                    }
+                    body {
+                        margin: 0;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h1>تحصيلات جمعية زواج</h1>
+                <p>قائمة التحصيلات المالية للأعضاء</p>
+            </div>
+
+            <div class="print-date">
+                تاريخ الطباعة: ${formatDate(new Date().toISOString().split('T')[0])}
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>العضو</th>
+                        <th>المبلغ</th>
+                        <th>تاريخ التحصيل</th>
+                        <th>طريقة التحويل</th>
+                        <th>البنك</th>
+                        <th>المستلم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${collections.map((col, index) => {
+                        const member = members.find(m => m.id === col.memberId);
+                        return `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${member ? member.name : ''}</td>
+                                <td>${col.amount} ريال</td>
+                                <td>${formatDate(col.date)}</td>
+                                <td>${col.method === 'bank' ? 'تحويل بنكي' : col.method === 'cash' ? 'نقدي' : 'أخرى'}</td>
+                                <td>${col.method === 'bank' ? col.bankName : '-'}</td>
+                                <td>${col.recipient}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+
+            <div class="summary">
+                <div class="summary-item">
+                    <strong>إجمالي التحصيلات:</strong> ${calculateTotalAmount()} ريال
+                </div>
+                <div class="summary-item">
+                    <strong>عدد العمليات:</strong> ${collections.length}
+                </div>
+                <div class="summary-item">
+                    <strong>تحويلات بنكية:</strong> ${calculateBankTransfers()} ريال
+                </div>
+                <div class="summary-item">
+                    <strong>مدفوعات نقدية:</strong> ${calculateCashPayments()} ريال
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>التطبيق عمل الاستاذ / ناصر مسعود آل مستنير إهداء لابناء القبيلة</p>
+                <p>تم إنشاء هذا التقرير بواسطة تطبيق جمعية زواج</p>
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 500);
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    // كتابة المحتوى في نافذة الطباعة
+    printWindow.document.open();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+}
+
+// وظيفة لحساب إجمالي المبلغ
+function calculateTotalAmount() {
+    return collections.reduce((total, col) => total + col.amount, 0);
+}
+
+// وظيفة لحساب إجمالي التحويلات البنكية
+function calculateBankTransfers() {
+    return collections
+        .filter(col => col.method === 'bank')
+        .reduce((total, col) => total + col.amount, 0);
+}
+
+// وظيفة لحساب إجمالي المدفوعات النقدية
+function calculateCashPayments() {
+    return collections
+        .filter(col => col.method === 'cash')
+        .reduce((total, col) => total + col.amount, 0);
+}
+
+// وظيفة لتصفية جدول التحصيلات
+function filterCollectionTable() {
+    const searchInput = document.getElementById('collectionSearchInput');
+    const methodFilter = document.getElementById('collectionMethodFilter');
+    const dateFilter = document.getElementById('collectionDateFilter');
+
+    if (!searchInput || !methodFilter || !dateFilter) return;
+
+    const searchTerm = searchInput.value.trim().toLowerCase();
+    const methodValue = methodFilter.value;
+    const dateValue = dateFilter.value;
+
     const tbody = document.getElementById('collectionBody');
     if (!tbody) return;
+
+    // إعادة عرض الجدول مع تطبيق الفلاتر
     tbody.innerHTML = '';
-    collections.forEach(col => {
+
+    // تحديث إحصائيات التحصيل (سيتم تحديثها بناءً على جميع التحصيلات، وليس فقط المصفاة)
+    updateCollectionStats();
+
+    // تصفية وعرض التحصيلات
+    collections.forEach((col, index) => {
         const member = members.find(m => m.id === col.memberId);
-        const row = tbody.insertRow();
-        row.insertCell().textContent = member ? member.name : '';
-        row.insertCell().textContent = col.amount;
-        row.insertCell().textContent = col.recipient;
-        row.insertCell().textContent = col.date;
-        row.insertCell().textContent = col.method === 'bank' ? 'تحويل بنكي' : col.method === 'cash' ? 'نقدي' : 'أخرى';
-        row.insertCell().textContent = col.method === 'bank' ? col.bankName : '';
+        const memberName = member ? member.name.toLowerCase() : '';
+        const recipientName = col.recipient.toLowerCase();
+        const bankName = col.bankName ? col.bankName.toLowerCase() : '';
+
+        // تطبيق فلتر البحث
+        const matchesSearch =
+            memberName.includes(searchTerm) ||
+            recipientName.includes(searchTerm) ||
+            bankName.includes(searchTerm) ||
+            col.amount.toString().includes(searchTerm);
+
+        // تطبيق فلتر طريقة التحويل
+        const matchesMethod = methodValue === '' || col.method === methodValue;
+
+        // تطبيق فلتر التاريخ
+        let matchesDate = true;
+        if (dateValue !== '') {
+            const collectionDate = new Date(col.date);
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay()); // بداية الأسبوع (الأحد)
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+            if (dateValue === 'today') {
+                matchesDate = isSameDay(collectionDate, today);
+            } else if (dateValue === 'week') {
+                matchesDate = collectionDate >= startOfWeek && collectionDate <= today;
+            } else if (dateValue === 'month') {
+                matchesDate = collectionDate >= startOfMonth && collectionDate <= today;
+            } else if (dateValue === 'year') {
+                matchesDate = collectionDate >= startOfYear && collectionDate <= today;
+            }
+        }
+
+        // إذا تطابقت جميع الفلاتر، أضف الصف إلى الجدول
+        if (matchesSearch && matchesMethod && matchesDate) {
+            const row = tbody.insertRow();
+
+            // إضافة خلية الرقم التسلسلي
+            const indexCell = row.insertCell();
+            indexCell.textContent = index + 1;
+
+            // إضافة خلية اسم العضو
+            const nameCell = row.insertCell();
+            nameCell.textContent = member ? member.name : '';
+
+            // إضافة خلية المبلغ
+            const amountCell = row.insertCell();
+            amountCell.textContent = col.amount + ' ريال';
+
+            // إضافة خلية تاريخ التحصيل
+            const dateCell = row.insertCell();
+            dateCell.textContent = formatDate(col.date);
+
+            // إضافة خلية طريقة التحويل
+            const methodCell = row.insertCell();
+            methodCell.textContent = col.method === 'bank' ? 'تحويل بنكي' : col.method === 'cash' ? 'نقدي' : 'أخرى';
+
+            // إضافة خلية اسم البنك
+            const bankCell = row.insertCell();
+            bankCell.textContent = col.method === 'bank' ? col.bankName : '-';
+
+            // إضافة خلية المستلم
+            const recipientCell = row.insertCell();
+            recipientCell.textContent = col.recipient;
+
+            // إضافة خلية الإجراءات
+            const actionsCell = row.insertCell();
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'action-buttons';
+
+            // زر حذف
+            const deleteButton = document.createElement('button');
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.title = 'حذف';
+            deleteButton.className = 'delete-btn';
+            deleteButton.onclick = () => {
+                if (confirm(`هل أنت متأكد من حذف هذا التحصيل؟`)) {
+                    deleteCollection(index);
+                }
+            };
+            actionsDiv.appendChild(deleteButton);
+
+            actionsCell.appendChild(actionsDiv);
+        }
     });
+}
+
+// وظيفة للتحقق مما إذا كان تاريخان في نفس اليوم
+function isSameDay(date1, date2) {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+}
+function renderCollectionTable() {
+    // تحديث إحصائيات التحصيل
+    updateCollectionStats();
+
+    // استخدام وظيفة تصفية الجدول لعرض جميع التحصيلات
+    // إعادة تعيين حقول البحث والفلاتر
+    const searchInput = document.getElementById('collectionSearchInput');
+    const methodFilter = document.getElementById('collectionMethodFilter');
+    const dateFilter = document.getElementById('collectionDateFilter');
+
+    if (searchInput) searchInput.value = '';
+    if (methodFilter) methodFilter.value = '';
+    if (dateFilter) dateFilter.value = '';
+
+    // عرض جميع التحصيلات
+    filterCollectionTable();
+}
+
+// وظيفة لحذف تحصيل
+function deleteCollection(index) {
+    collections.splice(index, 1);
+    saveCollections();
+    renderCollectionTable();
+    alert('تم حذف التحصيل بنجاح.');
+}
+
+// وظيفة لحفظ التحصيلات
+function saveCollections() {
+    localStorage.setItem('zwaGCollections', JSON.stringify(collections));
+}
+
+// وظيفة لتحميل التحصيلات
+function loadCollections() {
+    const storedCollections = localStorage.getItem('zwaGCollections');
+    if (storedCollections) {
+        collections = JSON.parse(storedCollections);
+    } else {
+        collections = [];
+    }
+}
+
+// وظيفة لتحديث إحصائيات التحصيل
+function updateCollectionStats() {
+    // حساب إجمالي التحصيلات
+    let totalAmount = 0;
+    let bankTransfers = 0;
+    let cashPayments = 0;
+
+    collections.forEach(col => {
+        totalAmount += col.amount;
+        if (col.method === 'bank') {
+            bankTransfers += col.amount;
+        } else if (col.method === 'cash') {
+            cashPayments += col.amount;
+        }
+    });
+
+    // تحديث عناصر الإحصائيات
+    const totalAmountElement = document.getElementById('totalCollectionAmount');
+    const totalCountElement = document.getElementById('totalCollectionCount');
+    const bankTransfersElement = document.getElementById('bankTransfersAmount');
+    const cashPaymentsElement = document.getElementById('cashPaymentsAmount');
+
+    if (totalAmountElement) totalAmountElement.textContent = totalAmount + ' ريال';
+    if (totalCountElement) totalCountElement.textContent = collections.length;
+    if (bankTransfersElement) bankTransfersElement.textContent = bankTransfers + ' ريال';
+    if (cashPaymentsElement) cashPaymentsElement.textContent = cashPayments + ' ريال';
 }
 // نافذة التفاصيل
 function showMemberDetails(memberId) {

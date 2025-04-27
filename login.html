@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - جمعية زواج</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="login-style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="particles-container" id="particles-js"></div>
+    
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="شعار جمعية زواج" class="logo">
+                <div class="logo-text">
+                    <h1>جمعية زواج</h1>
+                    <p>معاً لدعم الشباب الراغبين في الزواج</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="login-content">
+            <div class="welcome-message">
+                <h2 class="animated-text">أهلاً بكم في تطبيق جمعية زواج</h2>
+                <p class="author-credit">فكرة وإعداد وتصميم الأستاذ / ناصر مسعود آل مستنير</p>
+                <p class="app-description">إهداء بسيط للشباب الراغبين في الزواج</p>
+            </div>
+            
+            <div class="login-form-container">
+                <div class="login-form">
+                    <h3><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</h3>
+                    <div class="form-group">
+                        <label for="idNumber">رقم الهوية</label>
+                        <input type="text" id="idNumber" placeholder="أدخل رقم الهوية الخاص بك" maxlength="10" pattern="\d{10}" required>
+                        <small class="error-message" id="idError"></small>
+                    </div>
+                    <button type="button" id="loginButton" class="login-btn">
+                        <i class="fas fa-arrow-right"></i> دخول
+                    </button>
+                    <div class="welcome-user" id="welcomeUser">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="welcomeMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="login-features">
+            <div class="feature">
+                <i class="fas fa-users"></i>
+                <h4>إدارة الأعضاء</h4>
+                <p>تسجيل وإدارة بيانات الأعضاء بكل سهولة</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-hand-holding-usd"></i>
+                <h4>إدارة التحصيلات</h4>
+                <p>متابعة وإدارة التحصيلات المالية للأعضاء</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-calendar-alt"></i>
+                <h4>متابعة مواعيد الزواج</h4>
+                <p>تنبيهات ومتابعة لمواعيد زواج الأعضاء</p>
+            </div>
+        </div>
+        
+        <div class="login-footer">
+            <p>جميع الحقوق محفوظة &copy; <span id="currentYear"></span> - جمعية زواج</p>
+            <div class="social-icons">
+                <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="login-script.js"></script>
+</body>
+</html>
